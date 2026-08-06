@@ -4,7 +4,7 @@ import { useAuth } from '../AuthContext'
 import { buildReceiptData } from '../ThermalPrinter'
 import {
   Plus, Minus, Trash2, ShoppingCart, X, Search, CreditCard,
-  Banknote, QrCode, Receipt, CheckCircle, Printer, Package, Bluetooth,
+  Banknote, QrCode, Receipt, CheckCircle, Printer, Package,
 } from 'lucide-react'
 
 const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n)
@@ -196,125 +196,17 @@ export default function POSPage() {
     }
   }
 
-  const printReceipt = () => {
+  const printBtReceipt = async (printerInstance) => {
     if (!receipt) return
-    // NOTE: Browser security prevents silent printing without the system print dialog.
-    // This uses a hidden iframe so the user only sees the OS print dialog, not a popup window.
-    const itemsHtml = (receipt.items || []).map(i => {
-      let html = `<tr><td>${i.qty}x ${i.name}</td><td>${fmt(i.subtotal)}</td></tr>`
-      html += `<tr><td style="padding-left:10px;color:#666">@ ${fmt(i.price)}</td><td></td></tr>`
-      if (i.discount > 0) {
-        html += `<tr><td style="padding-left:10px;color:#c00;font-size:11px">Diskon</td><td style="color:#c00;font-size:11px">-${fmt(i.discount * i.qty)}</td></tr>`
-      }
-      return html
-    }).join('')
-    const discountHtml = receipt.discount > 0 ? `<tr><td>Diskon:</td><td>-${fmt(receipt.discount)}</td></tr>` : ''
-    const changeHtml = receipt.change > 0 ? `<tr><td class="bold">Kembali:</td><td class="bold">${fmt(receipt.change)}</td></tr>` : ''
-    const tableLabel = receipt.table
-      ? `Meja ${receipt.table.number || ''}${receipt.table.name ? ' - ' + receipt.table.name : ''}`
-      : ''
-    const tableHtml = tableLabel ? `<div class="bold">${tableLabel}</div>` : ''
-
-    const html = `<!DOCTYPE html>
-<html><head>
-<title>Struk</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: monospace; font-size: 13px; padding: 10px; background: #fff; }
-  .center { text-align: center; }
-  .bold { font-weight: bold; }
-  .big { font-size: 18px; font-weight: bold; }
-  .line { border-top: 1px dashed #000; margin: 6px 0; }
-  .line2 { border-top: 2px solid #000; margin: 6px 0; }
-  table { width: 100%; }
-  td { padding: 2px 0; }
-  td:last-child { text-align: right; }
-  @media print { body { padding: 0; } @page { margin: 5mm; } }
-</style></head><body>
-<div class="center bold big">${storeSettings.store_name || 'Warung Kopi'}</div>
-<div class="center">${storeSettings.store_address || 'Jl. Merdeka No. 88, Bandung'}</div>
-<div class="center">${storeSettings.store_phone || '08123456789'}</div>
-<div class="line2"></div>
-<div class="bold">No   : ${receipt.receipt_no || ''}</div>
-<div class="bold">Tgl  : ${receipt.date ? new Date(receipt.date).toLocaleString('id-ID') : ''}</div>
-<div class="bold">Kasir: ${receipt.cashier || ''}</div>
-${tableHtml}
-<div class="line"></div>
-<table>${itemsHtml}</table>
-<div class="line"></div>
-<table>
-<tr><td>Subtotal:</td><td>${fmt(receipt.subtotal)}</td></tr>
-${discountHtml}
-<tr><td>PPN 11%:</td><td>${fmt(receipt.tax)}</td></tr>
-</table>
-<div class="line2"></div>
-<table>
-<tr><td class="bold" style="font-size:15px">TOTAL:</td><td class="bold" style="font-size:15px">${fmt(receipt.total)}</td></tr>
-</table>
-<div class="line2"></div>
-<table>
-<tr><td>Bayar (${(receipt.payment_method || '').toUpperCase()}):</td><td>${fmt(receipt.payment_amount)}</td></tr>
-${changeHtml}
-</table>
-<div class="line"></div>
-<div class="center bold">${storeSettings.receipt_footer || 'Terima kasih atas kunjungan Anda!'}</div>
-<script>
-  window.onload = function() { setTimeout(function() { window.print(); }, 300); };
-</script>
-</body></html>`
-
-    let iframe = document.getElementById('receipt-print-frame')
-    if (!iframe) {
-      iframe = document.createElement('iframe')
-      iframe.id = 'receipt-print-frame'
-      iframe.style.position = 'fixed'
-      iframe.style.bottom = '0'
-      iframe.style.right = '0'
-      iframe.style.width = '1px'
-      iframe.style.height = '1px'
-      iframe.style.opacity = '0'
-      iframe.style.border = 'none'
-      document.body.appendChild(iframe)
-    }
-    iframe.contentWindow.document.open()
-    iframe.contentWindow.document.write(html)
-    iframe.contentWindow.document.close()
-  }
-
-  const connectBtPrinter = async () => {
-    try {
-      setBtStatus('Menghubungkan...')
-      const { default: ThermalPrinter } = await import('../ThermalPrinter')
-      const printer = new ThermalPrinter()
-      await printer.connect()
-      setBtPrinter(printer)
-      setBtStatus('Tersambung')
-      setTimeout(() => setBtStatus(''), 2000)
-    } catch (err) {
-      setBtStatus(err.message || 'Gagal menghubungkan')
-      setTimeout(() => setBtStatus(''), 4000)
-    }
-  }
-
-  const disconnectBtPrinter = () => {
-    if (btPrinter) {
-      btPrinter.disconnect()
-      setBtPrinter(null)
-      setBtStatus('Terputus')
-      setTimeout(() => setBtStatus(''), 2000)
-    }
-  }
-
-  const printBtReceipt = async () => {
-    if (!btPrinter || !receipt) return
+    const printer = printerInstance || btPrinter
+    if (!printer) return
     try {
       setBtPrinting(true)
       const { buildReceiptData } = await import('../ThermalPrinter')
       const data = buildReceiptData(receipt, storeSettings)
-      await btPrinter.send(data)
-      // Disconnect setelah cetak selesai supaya printer berhenti
-      btPrinter.disconnect()
-      setBtPrinter(null)
+      await printer.send(data)
+      printer.disconnect()
+      if (!printerInstance) setBtPrinter(null)
       setBtStatus('Berhasil cetak!')
       setTimeout(() => setBtStatus(''), 2000)
     } catch (err) {
@@ -323,6 +215,26 @@ ${changeHtml}
     } finally {
       setBtPrinting(false)
     }
+  }
+
+  const handlePrintReceipt = async () => {
+    if (!receipt) return
+    let printer = btPrinter
+    if (!printer) {
+      try {
+        setBtStatus('Menghubungkan printer...')
+        const { default: ThermalPrinter } = await import('../ThermalPrinter')
+        printer = new ThermalPrinter()
+        await printer.connect()
+        setBtPrinter(printer)
+        setBtStatus('')
+      } catch (err) {
+        setBtStatus(err.message || 'Gagal menghubungkan printer')
+        setTimeout(() => setBtStatus(''), 4000)
+        return
+      }
+    }
+    await printBtReceipt(printer)
   }
 
   const quickAmounts = [50000, 100000, 150000, 200000, 500000]
@@ -826,44 +738,14 @@ ${changeHtml}
             )}
 
             <div className="flex gap-2 mt-4">
-              {/* Bluetooth connect/disconnect */}
-              {btPrinter ? (
-                <button
-                  onClick={disconnectBtPrinter}
-                  className="bg-red-50 hover:bg-red-100 text-red-600 font-medium py-3 px-4 rounded-xl flex items-center gap-2 text-sm"
-                >
-                  <Bluetooth size={18} />
-                  Putuskan
-                </button>
-              ) : (
-                <button
-                  onClick={connectBtPrinter}
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-3 px-4 rounded-xl flex items-center gap-2 text-sm"
-                >
-                  <Bluetooth size={18} />
-                  Sambung Printer
-                </button>
-              )}
-
-              {/* Bluetooth print */}
-              {btPrinter && (
-                <button
-                  onClick={printBtReceipt}
-                  disabled={btPrinting}
-                  className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white font-medium py-3 px-4 rounded-xl flex items-center gap-2 text-sm"
-                >
-                  <Printer size={18} />
-                  {btPrinting ? 'Mencetak...' : 'Cetak Bluetooth'}
-                </button>
-              )}
-
-              {/* Browser print */}
+              {/* Cetak Struk - langsung via Bluetooth, auto-connect */}
               <button
-                onClick={printReceipt}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-3 rounded-xl flex items-center justify-center gap-2"
+                onClick={handlePrintReceipt}
+                disabled={btPrinting}
+                className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white font-medium py-3 px-6 rounded-xl flex items-center justify-center gap-2"
               >
                 <Printer size={18} />
-                Cetak Struk
+                {btPrinting ? 'Mencetak...' : 'Cetak Struk'}
               </button>
 
               <button
