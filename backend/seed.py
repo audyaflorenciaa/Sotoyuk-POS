@@ -255,7 +255,7 @@ def seed():
     for branch_name, branch_obj in branch_map.items():
         # Override default settings to ensure they are unique per branch
         branch_settings = [
-            ("store_name", f"KopiKita {branch_name}"),
+            ("store_name", f"WarungKopi {branch_name}"),
             ("store_address", f"{branch_obj.address}"),
             ("store_phone", fake.phone_number()[:20]),
             ("tax_rate", "11"),

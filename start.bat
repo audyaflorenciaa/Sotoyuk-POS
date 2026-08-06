@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ==========================================
-echo   F&B POS - KopiKita Cafe
+echo   POS-WarungKopi
 echo   Local Installer / Starter
 echo ==========================================
 echo.

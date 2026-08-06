@@ -51,14 +51,14 @@ Install Tailscale di setiap PC/tablet cabang, login ke **tailnet yang sama**.
 
 ### Windows
 
-1. Extract `KasirPOS-vXXXX.zip`
+1. Extract `POS-WarungKopi-vXXXX.zip`
 2. Klik kanan `start.bat` → **Run as administrator**
 3. Tunggu sampai muncul "Server berjalan!"
 
 ### Linux/Mac
 
 ```bash
-cd KasirPOS
+cd POS-WarungKopi
 ./start.sh
 ```
 
@@ -151,8 +151,8 @@ Di server pusat, tambahkan cron backup:
 
 ```bash
 # Backup setiap hari jam 2 pagi
-0 2 * * * cp /path/to/KasirPOS/backend/kasir.db /backup/kasir_$(date +\%Y\%m\%d).db
-0 2 * * * tar -czf /backup/uploads_$(date +\%Y\%m\%d).tar.gz /path/to/KasirPOS/backend/uploads/
+0 2 * * * cp /path/to/POS-WarungKopi/backend/kasir.db /backup/kasir_$(date +\%Y\%m\%d).db
+0 2 * * * tar -czf /backup/uploads_$(date +\%Y\%m\%d).tar.gz /path/to/POS-WarungKopi/backend/uploads/
 ```
 
 ### Koneksi Internet Cabang
@@ -201,7 +201,7 @@ Agar server jalan otomatis saat Windows restart:
 Buat systemd service:
 
 ```bash
-sudo nano /etc/systemd/system/kasir-pos.service
+sudo nano /etc/systemd/system/POS-WarungKopi.service
 ```
 
 Isi:
@@ -214,8 +214,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/home/ubuntu/KasirPOS/backend
-ExecStart=/home/ubuntu/KasirPOS/backend/.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+WorkingDirectory=/home/ubuntu/POS-WarungKopi/backend
+ExecStart=/home/ubuntu/POS-WarungKopi/backend/.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=10
 
@@ -226,8 +226,8 @@ WantedBy=multi-user.target
 Aktifkan:
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable kasir-pos
-sudo systemctl start kasir-pos
+sudo systemctl enable POS-WarungKopi
+sudo systemctl start POS-WarungKopi
 ```
 
 ---

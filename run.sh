@@ -2,7 +2,7 @@
 set -e
 
 echo "=========================================="
-echo "  F&B POS - KopiKita Cafe"
+echo "  POS-WarungKopi"
 echo "=========================================="
 
 cd "$(dirname "$0")"

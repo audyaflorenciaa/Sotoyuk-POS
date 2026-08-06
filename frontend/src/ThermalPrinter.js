@@ -193,7 +193,7 @@ class ThermalPrinter {
 export function buildReceiptData(receipt, storeSettings = {}) {
   const cmds = []
 
-  const storeName = storeSettings.store_name || 'KopiKita Cafe'
+  const storeName = storeSettings.store_name || 'Warung Kopi'
   const storeAddress = storeSettings.store_address || 'Jl. Merdeka No. 88, Bandung'
   const storePhone = storeSettings.store_phone || '08123456789'
   const footer = storeSettings.receipt_footer || 'Terima kasih atas kunjungan Anda!'

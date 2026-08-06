@@ -22,14 +22,14 @@
 # 1. MASUK KE SERVER
 # ============================================
 ssh user@IP_SERVER
-cd /opt/kasir-pos
+cd /opt/POS-WarungKopi
 
 # ============================================
 # 2. BACKUP DATABASE (WAJIB!)
 # ============================================
-sudo systemctl stop kasir-pos
+sudo systemctl stop POS-WarungKopi
 cp backend/kasir.db /backup/kasir_$(date +%Y%m%d_%H%M).db
-sudo systemctl start kasir-pos
+sudo systemctl start POS-WarungKopi
 echo "Backup selesai, aplikasi jalan kembali."
 
 # ============================================
@@ -56,12 +56,12 @@ cp -r dist/* ../backend/static/
 # 6. RESTART APLIKASI (downtime ~5-10 detik)
 # ============================================
 cd ..
-sudo systemctl restart kasir-pos
+sudo systemctl restart POS-WarungKopi
 
 # ============================================
 # 7. VERIFIKASI
 # ============================================
-sudo systemctl status kasir-pos
+sudo systemctl status POS-WarungKopi
 curl -s https://kasir.yourdomain.com/api/health
 ```
 
@@ -77,13 +77,13 @@ Untuk update besar yang butuh waktu lama:
 
 ```bash
 # Buat file maintenance flag
-sudo touch /opt/kasir-pos/backend/.maintenance
+sudo touch /opt/POS-WarungKopi/backend/.maintenance
 ```
 
 ### 2. Konfigurasi Nginx untuk Maintenance Page
 
 ```bash
-sudo nano /etc/nginx/sites-available/kasir-pos
+sudo nano /etc/nginx/sites-available/POS-WarungKopi
 ```
 
 Tambahkan di block server utama:
@@ -91,7 +91,7 @@ Tambahkan di block server utama:
 ```nginx
 # Maintenance mode
 location / {
-    if (-f /opt/kasir-pos/backend/.maintenance) {
+    if (-f /opt/POS-WarungKopi/backend/.maintenance) {
         return 503;
     }
     proxy_pass http://127.0.0.1:8000;
@@ -102,7 +102,7 @@ location / {
 # Maintenance page
 error_page 503 @maintenance;
 location @maintenance {
-    root /opt/kasir-pos/backend/static;
+    root /opt/POS-WarungKopi/backend/static;
     rewrite ^(.*)$ /maintenance.html break;
 }
 ```
@@ -110,7 +110,7 @@ location @maintenance {
 Buat halaman maintenance:
 
 ```bash
-cat > /opt/kasir-pos/backend/static/maintenance.html << 'EOF'
+cat > /opt/POS-WarungKopi/backend/static/maintenance.html << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
@@ -137,7 +137,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ```bash
 # Backup
-sudo systemctl stop kasir-pos
+sudo systemctl stop POS-WarungKopi
 cp backend/kasir.db /backup/kasir_$(date +%Y%m%d_%H%M).db
 
 # Update kode
@@ -147,10 +147,10 @@ cd ../frontend && npm install && npx vite build && cp -r dist/* ../backend/stati
 
 # Restart
 cd ..
-sudo systemctl start kasir-pos
+sudo systemctl start POS-WarungKopi
 
 # Hapus maintenance mode
-rm /opt/kasir-pos/backend/.maintenance
+rm /opt/POS-WarungKopi/backend/.maintenance
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
@@ -164,7 +164,7 @@ curl -s https://kasir.yourdomain.com/api/health
 
 ## Cara 3: Script Update Otomatis
 
-Buat script `/opt/kasir-pos/update.sh`:
+Buat script `/opt/POS-WarungKopi/update.sh`:
 
 ```bash
 #!/bin/bash
@@ -175,15 +175,15 @@ echo "  Update F&B POS"
 echo "=========================================="
 
 BACKUP_DIR="/backup"
-APP_DIR="/opt/kasir-pos"
+APP_DIR="/opt/POS-WarungKopi"
 DATE=$(date +%Y%m%d_%H%M)
 
 # 1. Backup
 echo "[1/5] Backup database..."
-sudo systemctl stop kasir-pos
+sudo systemctl stop POS-WarungKopi
 mkdir -p $BACKUP_DIR
 cp $APP_DIR/backend/kasir.db $BACKUP_DIR/kasir_$DATE.db
-sudo systemctl start kasir-pos
+sudo systemctl start POS-WarungKopi
 echo "  Database backed up ke $BACKUP_DIR/kasir_$DATE.db"
 
 # 2. Pull kode
@@ -207,21 +207,21 @@ cp -r dist/* ../backend/static/
 # 5. Restart
 echo "[5/5] Restart aplikasi..."
 cd ..
-sudo systemctl restart kasir-pos
+sudo systemctl restart POS-WarungKopi
 
 echo ""
 echo "=========================================="
 echo "  Update selesai!"
 echo "  Backup: $BACKUP_DIR/kasir_$DATE.db"
-echo "  Status: $(sudo systemctl is-active kasir-pos)"
+echo "  Status: $(sudo systemctl is-active POS-WarungKopi)"
 echo "=========================================="
 ```
 
 Jalankan update:
 
 ```bash
-chmod +x /opt/kasir-pos/update.sh
-/opt/kasir-pos/update.sh
+chmod +x /opt/POS-WarungKopi/update.sh
+/opt/POS-WarungKopi/update.sh
 ```
 
 ---
@@ -230,13 +230,13 @@ chmod +x /opt/kasir-pos/update.sh
 
 ```bash
 # 1. Stop aplikasi
-sudo systemctl stop kasir-pos
+sudo systemctl stop POS-WarungKopi
 
 # 2. Restore database dari backup
-cp /backup/kasir_20260804_1200.db /opt/kasir-pos/backend/kasir.db
+cp /backup/kasir_20260804_1200.db /opt/POS-WarungKopi/backend/kasir.db
 
 # 3. Kembalikan kode ke versi sebelumnya
-cd /opt/kasir-pos
+cd /opt/POS-WarungKopi
 git log --oneline -5           # Lihat versi sebelumnya
 git checkout COMMIT_HASH       # Kembalikan ke versi tertentu
 
@@ -246,7 +246,7 @@ cd ../frontend && npm install && npx vite build && cp -r dist/* ../backend/stati
 
 # 5. Restart
 cd ..
-sudo systemctl restart kasir-pos
+sudo systemctl restart POS-WarungKopi
 
 echo "Rollback selesai!"
 ```
@@ -298,16 +298,16 @@ echo "Rollback selesai!"
 
 ```bash
 # Cek log error
-sudo journalctl -u kasir-pos -p err -n 20
+sudo journalctl -u POS-WarungKopi -p err -n 20
 
 # Cek status service
-sudo systemctl status kasir-pos
+sudo systemctl status POS-WarungKopi
 
 # Cek response time
 curl -o /dev/null -s -w "Response: %{time_total}s\n" https://kasir.yourdomain.com/api/health
 
 # Cek database size
-ls -lh /opt/kasir-pos/backend/kasir.db
+ls -lh /opt/POS-WarungKopi/backend/kasir.db
 ```
 
 ---

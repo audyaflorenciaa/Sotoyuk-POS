@@ -231,7 +231,7 @@ export default function POSPage() {
   td:last-child { text-align: right; }
   @media print { body { padding: 0; } @page { margin: 5mm; } }
 </style></head><body>
-<div class="center bold big">${storeSettings.store_name || 'KopiKita Cafe'}</div>
+<div class="center bold big">${storeSettings.store_name || 'Warung Kopi'}</div>
 <div class="center">${storeSettings.store_address || 'Jl. Merdeka No. 88, Bandung'}</div>
 <div class="center">${storeSettings.store_phone || '08123456789'}</div>
 <div class="line2"></div>
@@ -722,7 +722,7 @@ ${changeHtml}
             {/* Receipt content */}
             <div id="printable-receipt" className="bg-slate-50 rounded-xl p-4 font-mono text-xs space-y-2">
               <div className="text-center">
-                <p className="font-bold text-sm">{storeSettings.store_name || 'KopiKita Cafe'}</p>
+                <p className="font-bold text-sm">{storeSettings.store_name || 'Warung Kopi'}</p>
                 <p className="text-slate-500">{storeSettings.store_address || 'Jl. Merdeka No. 88, Bandung'}</p>
                 <p className="text-slate-500">Telp: {storeSettings.store_phone || '08123456789'}</p>
                 <p className="border-b border-dashed border-slate-300 my-2"></p>

@@ -1,8 +1,8 @@
-# F&B POS - KopiKita Cafe
+# POS-WarungKopi
 # Local Installer / Starter (PowerShell)
 
 Write-Host "=========================================="
-Write-Host "  F&B POS - KopiKita Cafe"
+Write-Host "  POS-WarungKopi"
 Write-Host "  Local Installer / Starter"
 Write-Host "=========================================="
 

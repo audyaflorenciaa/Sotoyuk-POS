@@ -53,17 +53,17 @@ nginx -v
 
 ```bash
 # Dari komputer lokal
-scp -r "/home/edi/Kasir Full/" user@IP_SERVER:/opt/kasir-pos
+scp -r "/home/edi/Kasir Full/" user@IP_SERVER:/opt/POS-WarungKopi
 
 # Atau pakai git
 cd /opt
-git clone REPO_URL kasir-pos
+git clone REPO_URL POS-WarungKopi
 ```
 
 ### Setup Virtual Environment
 
 ```bash
-cd /opt/kasir-pos/backend
+cd /opt/POS-WarungKopi/backend
 
 # Buat virtual environment
 python3 -m venv venv
@@ -81,7 +81,7 @@ pip install -r requirements.txt
 ## 3. Build Frontend
 
 ```bash
-cd /opt/kasir-pos/frontend
+cd /opt/POS-WarungKopi/frontend
 
 # Install dependencies
 npm install
@@ -100,7 +100,7 @@ cp -r dist/* ../backend/static/
 ### Buat File .env
 
 ```bash
-cd /opt/kasir-pos/backend
+cd /opt/POS-WarungKopi/backend
 nano .env
 ```
 
@@ -112,7 +112,7 @@ Isi file `.env`:
 # ============================================
 
 # Nama Aplikasi
-APP_NAME=KopiKita POS
+APP_NAME=POS-WarungKopi
 
 # Environment
 APP_ENV=production
@@ -152,22 +152,22 @@ Copy hasilnya dan tempel ke `SECRET_KEY` di file `.env`.
 ### Buat Service File
 
 ```bash
-sudo nano /etc/systemd/system/kasir-pos.service
+sudo nano /etc/systemd/system/POS-WarungKopi.service
 ```
 
 Isi file:
 
 ```ini
 [Unit]
-Description=F&B POS - KopiKita Cafe
+Description=F&B POS - WarungKopi Cafe
 After=network.target
 
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/opt/kasir-pos/backend
-Environment="PATH=/opt/kasir-pos/backend/venv/bin"
-ExecStart=/opt/kasir-pos/backend/venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+WorkingDirectory=/opt/POS-WarungKopi/backend
+Environment="PATH=/opt/POS-WarungKopi/backend/venv/bin"
+ExecStart=/opt/POS-WarungKopi/backend/venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=5
 
@@ -182,13 +182,13 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 
 # Aktifkan saat boot
-sudo systemctl enable kasir-pos
+sudo systemctl enable POS-WarungKopi
 
 # Start service
-sudo systemctl start kasir-pos
+sudo systemctl start POS-WarungKopi
 
 # Cek status
-sudo systemctl status kasir-pos
+sudo systemctl status POS-WarungKopi
 ```
 
 ---
@@ -198,7 +198,7 @@ sudo systemctl status kasir-pos
 ### Buat Konfigurasi
 
 ```bash
-sudo nano /etc/nginx/sites-available/kasir-pos
+sudo nano /etc/nginx/sites-available/POS-WarungKopi
 ```
 
 Isi file:
@@ -225,7 +225,7 @@ server {
 
     # Static files (uploads)
     location /uploads/ {
-        alias /opt/kasir-pos/backend/uploads/;
+        alias /opt/POS-WarungKopi/backend/uploads/;
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
@@ -245,7 +245,7 @@ server {
 
 ```bash
 # Buat symlink
-sudo ln -s /etc/nginx/sites-available/kasir-pos /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/POS-WarungKopi /etc/nginx/sites-enabled/
 
 # Hapus default config (opsional)
 sudo rm /etc/nginx/sites-enabled/default
@@ -311,7 +311,7 @@ sudo ufw status
 ### Seed Database (Pertama Kali)
 
 ```bash
-cd /opt/kasir-pos/backend
+cd /opt/POS-WarungKopi/backend
 source venv/bin/activate
 
 # Seed data awal
@@ -369,10 +369,10 @@ Buka browser: `https://kasir.yourdomain.com`
 
 ```bash
 # Backup database
-cp /opt/kasir-pos/backend/kasir.db /backup/kasir_$(date +%Y%m%d_%H%M).db
+cp /opt/POS-WarungKopi/backend/kasir.db /backup/kasir_$(date +%Y%m%d_%H%M).db
 
 # Backup uploads
-tar -czf /backup/uploads_$(date +%Y%m%d).tar.gz /opt/kasir-pos/backend/uploads/
+tar -czf /backup/uploads_$(date +%Y%m%d).tar.gz /opt/POS-WarungKopi/backend/uploads/
 ```
 
 ### Auto Backup (Cron)
@@ -382,21 +382,21 @@ tar -czf /backup/uploads_$(date +%Y%m%d).tar.gz /opt/kasir-pos/backend/uploads/
 crontab -e
 
 # Tambah baris berikut (backup jam 2 setiap hari):
-0 2 * * * cp /opt/kasir-pos/backend/kasir.db /backup/kasir_$(date +\%Y\%m\%d).db
-0 2 * * * tar -czf /backup/uploads_$(date +\%Y\%m\%d).tar.gz /opt/kasir-pos/backend/uploads/
+0 2 * * * cp /opt/POS-WarungKopi/backend/kasir.db /backup/kasir_$(date +\%Y\%m\%d).db
+0 2 * * * tar -czf /backup/uploads_$(date +\%Y\%m\%d).tar.gz /opt/POS-WarungKopi/backend/uploads/
 ```
 
 ### Restore Database
 
 ```bash
 # Stop service
-sudo systemctl stop kasir-pos
+sudo systemctl stop POS-WarungKopi
 
 # Restore
-cp /backup/kasir_20260804.db /opt/kasir-pos/backend/kasir.db
+cp /backup/kasir_20260804.db /opt/POS-WarungKopi/backend/kasir.db
 
 # Start service
-sudo systemctl start kasir-pos
+sudo systemctl start POS-WarungKopi
 ```
 
 ---
@@ -407,28 +407,28 @@ sudo systemctl start kasir-pos
 
 ```bash
 # Status
-sudo systemctl status kasir-pos
+sudo systemctl status POS-WarungKopi
 
 # Start
-sudo systemctl start kasir-pos
+sudo systemctl start POS-WarungKopi
 
 # Stop
-sudo systemctl stop kasir-pos
+sudo systemctl stop POS-WarungKopi
 
 # Restart
-sudo systemctl restart kasir-pos
+sudo systemctl restart POS-WarungKopi
 
 # Lihat log real-time
-sudo journalctl -u kasir-pos -f
+sudo journalctl -u POS-WarungKopi -f
 
 # Lihat log 100 baris terakhir
-sudo journalctl -u kasir-pos -n 100
+sudo journalctl -u POS-WarungKopi -n 100
 ```
 
 ### Update Aplikasi
 
 ```bash
-cd /opt/kasir-pos
+cd /opt/POS-WarungKopi
 
 # Pull kode terbaru
 git pull
@@ -445,13 +445,13 @@ npx vite build
 cp -r dist/* ../backend/static/
 
 # Restart service
-sudo systemctl restart kasir-pos
+sudo systemctl restart POS-WarungKopi
 ```
 
 ### Cek Database
 
 ```bash
-cd /opt/kasir-pos/backend
+cd /opt/POS-WarungKopi/backend
 source venv/bin/activate
 
 # Masuk SQLite shell
@@ -472,10 +472,10 @@ SELECT COUNT(*) FROM orders;     # Jumlah order
 
 ```bash
 # Cek service status
-sudo systemctl status kasir-pos
+sudo systemctl status POS-WarungKopi
 
 # Cek log
-sudo journalctl -u kasir-pos -n 50
+sudo journalctl -u POS-WarungKopi -n 50
 
 # Cek port
 ss -tlnp | grep 8000
@@ -485,10 +485,10 @@ ss -tlnp | grep 8000
 
 ```bash
 # Pastikan backend jalan
-sudo systemctl status kasir-pos
+sudo systemctl status POS-WarungKopi
 
 # Restart backend
-sudo systemctl restart kasir-pos
+sudo systemctl restart POS-WarungKopi
 
 # Cek nginx config
 sudo nginx -t
@@ -498,21 +498,21 @@ sudo nginx -t
 
 ```bash
 # Cek permission folder uploads
-ls -la /opt/kasir-pos/backend/uploads/
+ls -la /opt/POS-WarungKopi/backend/uploads/
 
 # Fix permission
-sudo chown -R www-data:www-data /opt/kasir-pos/backend/uploads/
-sudo chmod -R 755 /opt/kasir-pos/backend/uploads/
+sudo chown -R www-data:www-data /opt/POS-WarungKopi/backend/uploads/
+sudo chmod -R 755 /opt/POS-WarungKopi/backend/uploads/
 ```
 
 ### Masalah: Database Locked
 
 ```bash
 # Restart aplikasi
-sudo systemctl restart kasir-pos
+sudo systemctl restart POS-WarungKopi
 
 # Cek proses yang akses database
-fuser /opt/kasir-pos/backend/kasir.db
+fuser /opt/POS-WarungKopi/backend/kasir.db
 ```
 
 ### Masalah: SSL Expired
@@ -593,7 +593,7 @@ sudo systemctl restart nginx
 ## Struktur File
 
 ```
-/opt/kasir-pos/
+/opt/POS-WarungKopi/
 ├── backend/
 │   ├── app/
 │   │   ├── api/           # API endpoints
