@@ -7,9 +7,10 @@ import { applyTheme } from './utils/theme'
 import {
   LayoutDashboard, ShoppingCart, Package, Grid3X3, Table2, CreditCard,
   ClipboardList, BarChart3, Users, Settings, LogOut, Menu, X, Receipt,
-  Gift, Building2
+  Gift, Building2, KeyRound
 } from 'lucide-react'
 import BranchSwitcher from './components/BranchSwitcher'
+import ChangePasswordModal from './components/ChangePasswordModal'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['superadmin', 'admin', 'kasir'] },
@@ -31,6 +32,7 @@ export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [storeName, setStoreName] = useState('POS')
   const [storeLogo, setStoreLogo] = useState('')
+  const [showChangePassword, setShowChangePassword] = useState(false)
 
   useEffect(() => {
     settingAPI.list().then((r) => {
@@ -137,6 +139,14 @@ export default function Layout({ children }) {
             </div>
           )}
           <button
+            onClick={() => setShowChangePassword(true)}
+            className="flex items-center gap-2 text-sm w-full hover:opacity-100 transition-opacity mb-2"
+            style={{ color: 'var(--sidebar-text)', opacity: 0.6 }}
+          >
+            <KeyRound size={18} />
+            {sidebarOpen && <span>Ganti Password</span>}
+          </button>
+          <button
             onClick={handleLogout}
             className="flex items-center gap-2 text-sm w-full hover:text-red-400 transition-colors"
             style={{ color: 'var(--sidebar-text)', opacity: 0.6 }}
@@ -151,6 +161,10 @@ export default function Layout({ children }) {
       <main className="flex-1 overflow-y-auto" style={{ background: 'var(--body-bg)' }}>
         <div className="p-6">{children}</div>
       </main>
+
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
     </div>
   )
 }

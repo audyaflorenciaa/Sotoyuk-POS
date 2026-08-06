@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_admin_user, get_superadmin_user, get_current_user, get_current_branch
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.database import get_db
 from app.models import User, Branch, Role
-from app.schemas import Message, UserCreate, UserOut, UserUpdate
+from app.schemas import Message, PasswordChange, UserCreate, UserOut, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -27,6 +27,25 @@ def list_users(
         q = q.filter(User.branch_id == current_branch.id)
         
     return q.order_by(User.username).all()
+
+
+# NOTE: route ini harus didefinisikan SEBELUM route dengan path parameter (/{id})
+# agar tidak tertangkap sebagai id oleh FastAPI.
+@router.put("/change-password", response_model=Message)
+def change_password(
+    body: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not verify_password(body.current_password, current_user.password_hash):
+        raise HTTPException(400, "Password saat ini salah")
+
+    if len(body.new_password) < 6:
+        raise HTTPException(400, "Password baru minimal 6 karakter")
+
+    current_user.password_hash = hash_password(body.new_password)
+    db.commit()
+    return Message(detail="Password berhasil diganti")
 
 
 @router.get("/{id}", response_model=UserOut)

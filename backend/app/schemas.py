@@ -64,6 +64,11 @@ class UserOut(ORMModel):
     branch: Optional[BranchOut] = None
 
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=6)
+
+
 # --- Category ---
 class CategoryBase(BaseModel):
     name: str
