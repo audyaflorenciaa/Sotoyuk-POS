@@ -196,17 +196,21 @@ export default function POSPage() {
     }
   }
 
-  const printBtReceipt = async (printerInstance) => {
+  const printDirectReceipt = async (printerInstance, type) => {
     if (!receipt) return
-    const printer = printerInstance || btPrinter
-    if (!printer) return
     try {
       setBtPrinting(true)
-      const { buildReceiptData } = await import('../ThermalPrinter')
-      const data = buildReceiptData(receipt, storeSettings)
-      await printer.send(data)
-      printer.disconnect()
-      if (!printerInstance) setBtPrinter(null)
+      let data
+      if (type === 'usb') {
+        const { buildUsbReceiptData } = await import('../UsbPrinter')
+        data = buildUsbReceiptData(receipt, storeSettings)
+      } else {
+        const { buildReceiptData } = await import('../ThermalPrinter')
+        data = buildReceiptData(receipt, storeSettings)
+      }
+      await printerInstance.send(data)
+      printerInstance.disconnect()
+      if (type === 'bt' && printerInstance === btPrinter) setBtPrinter(null)
       setBtStatus('Berhasil cetak!')
       setTimeout(() => setBtStatus(''), 2000)
     } catch (err) {
@@ -294,22 +298,40 @@ ${changeHtml}
   const handlePrintReceipt = async () => {
     if (!receipt) return
     let printer = btPrinter
+
+    // 1) Bluetooth thermal printer
     if (!printer) {
       try {
-        setBtStatus('Menghubungkan printer...')
+        setBtStatus('Menghubungkan Bluetooth printer...')
         const { default: ThermalPrinter } = await import('../ThermalPrinter')
         printer = new ThermalPrinter()
         await printer.connect()
         setBtPrinter(printer)
         setBtStatus('')
+        return await printDirectReceipt(printer, 'bt')
       } catch {
-        setBtStatus('Printer Bluetooth tidak ditemukan, gunakan print dialog')
-        setTimeout(() => setBtStatus(''), 2000)
-        printBrowserReceipt()
-        return
+        // Lanjut ke USB
       }
+    } else {
+      return await printDirectReceipt(printer, 'bt')
     }
-    await printBtReceipt(printer)
+
+    // 2) USB thermal printer (WebUSB)
+    try {
+      setBtStatus('Menghubungkan USB printer...')
+      const { default: UsbPrinter } = await import('../UsbPrinter')
+      const usbPrinter = new UsbPrinter()
+      await usbPrinter.connect()
+      setBtStatus('')
+      return await printDirectReceipt(usbPrinter, 'usb')
+    } catch {
+      // Lanjut ke browser print
+    }
+
+    // 3) Fallback: browser print dialog (USB printer via OS)
+    setBtStatus('Menggunakan print dialog...')
+    setTimeout(() => setBtStatus(''), 1500)
+    printBrowserReceipt()
   }
 
   const quickAmounts = [50000, 100000, 150000, 200000, 500000]
