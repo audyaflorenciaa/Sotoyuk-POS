@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: pos-warungkopi
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pos-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: APP_NAME
+        value: "POS Warung Kopi"
+      - key: PYTHON_VERSION
+        value: "3.12"
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+  - type: postgresql
+    name: pos-db
+    plan: free
+    databaseName: pos
+    user: pos
