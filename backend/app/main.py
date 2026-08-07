@@ -16,8 +16,16 @@ from sqlalchemy.orm import Session
 
 settings = get_settings()
 
-FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
-UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
+_backend_root = Path(__file__).resolve().parent.parent
+_repo_root = _backend_root.parent
+
+# In Docker, frontend/dist is at /app/frontend/dist (backend_root / frontend/dist)
+# In local dev, frontend/dist is at repo_root / frontend/dist
+FRONTEND_DIR = _backend_root / "frontend" / "dist"
+if not FRONTEND_DIR.exists():
+    FRONTEND_DIR = _repo_root / "frontend" / "dist"
+
+UPLOADS_DIR = _backend_root / "uploads"
 
 
 @asynccontextmanager
