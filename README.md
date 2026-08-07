@@ -8,11 +8,11 @@ Sistem Point of Sale (POS) lengkap untuk bisnis F&B (Food & Beverage) dengan duk
 ![React](https://img.shields.io/badge/react-18+-61dafb)
 [![CI](https://github.com/pedip78/POS-WarungKopi/actions/workflows/ci.yml/badge.svg)](https://github.com/pedip78/POS-WarungKopi/actions/workflows/ci.yml)
 
-**🚀 [Live Preview](https://pos-warungkopi.onrender.com)**
+**🚀 [Live Preview](https://pos-warungkopi-797453151718.asia-southeast1.run.app)**
 
 > **Demo login:** `superadmin` / `superadmin` (Superadmin) atau `kasir utama` / `kasir1` (Kasir)
 >
-> ⚠️ Server free tier sleep setelah idle ~15 menit. Boot ulang butuh ~30 detik saat pertama kali diakses.
+> ⚠️ Server free tier sleep setelah idle ~15 menit. Boot ulang butuh ~10-30 detik saat pertama kali diakses.
 
 ---
 
