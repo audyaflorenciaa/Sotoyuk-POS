@@ -18,17 +18,17 @@ Sistem Point of Sale (POS) lengkap untuk bisnis F&B (Food & Beverage) dengan duk
 
 ## Screenshots
 
-| Dashboard | POS / Kasir |
-|-----------|-------------|
-| ![Dashboard](screenshots/dashboard.png) | ![POS](screenshots/pos.png) |
+| POS / Kasir | Produk |
+|-------------|--------|
+| ![POS](screenshots/pos.png) | ![Produk](screenshots/products.png) |
 
-| Manajemen Produk | Manajemen User |
-|------------------|----------------|
-| ![Produk](screenshots/products.png) | ![User](screenshots/users.png) |
+| Manajemen Meja | Manajemen Cabang |
+|----------------|------------------|
+| ![Meja](screenshots/tables.png) | ![Cabang](screenshots/branches.png) |
 
-| Laporan | Settings / Tema |
-|---------|-----------------|
-| ![Laporan](screenshots/reports.png) | ![Settings](screenshots/settings.png) |
+| Laporan |
+|---------|
+| ![Laporan](screenshots/reports.png) |
 
 ---
 
