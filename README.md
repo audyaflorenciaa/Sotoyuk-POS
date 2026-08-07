@@ -16,6 +16,22 @@ Sistem Point of Sale (POS) lengkap untuk bisnis F&B (Food & Beverage) dengan duk
 
 ---
 
+## Screenshots
+
+| Dashboard | POS / Kasir |
+|-----------|-------------|
+| ![Dashboard](screenshots/dashboard.png) | ![POS](screenshots/pos.png) |
+
+| Manajemen Produk | Manajemen User |
+|------------------|----------------|
+| ![Produk](screenshots/products.png) | ![User](screenshots/users.png) |
+
+| Laporan | Settings / Tema |
+|---------|-----------------|
+| ![Laporan](screenshots/reports.png) | ![Settings](screenshots/settings.png) |
+
+---
+
 ## Fitur Utama
 
 ### 🏪 Multi-Branch (Multi-Cabang)
