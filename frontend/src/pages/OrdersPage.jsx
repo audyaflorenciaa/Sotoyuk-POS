@@ -153,7 +153,6 @@ export default function OrdersPage() {
                 <th className="text-left px-4 py-3 font-medium text-slate-600">No. Order</th>
                 <th className="text-left px-4 py-3 font-medium text-slate-600">Tanggal</th>
                 {isSuperadmin && <th className="text-left px-4 py-3 font-medium text-slate-600">Cabang</th>}
-                <th className="text-center px-4 py-3 font-medium text-slate-600">Meja</th>
                 <th className="text-center px-4 py-3 font-medium text-slate-600">Status</th>
                 <th className="text-left px-4 py-3 font-medium text-slate-600">Bayar</th>
                 <th className="text-right px-4 py-3 font-medium text-slate-600">Total</th>
@@ -172,7 +171,6 @@ export default function OrdersPage() {
                       {o.branch ? o.branch.name : '-'}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-center">{o.table ? `#${o.table.number}` : '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[o.status] || ''}`}>
                       {o.status?.toUpperCase()}
@@ -237,10 +235,6 @@ export default function OrdersPage() {
                   <span className="text-slate-500">Tanggal</span>
                   <p>{detail.created_at ? new Date(detail.created_at).toLocaleString('id-ID') : '-'}</p>
                 </div>
-                <div>
-                  <span className="text-slate-500">Meja</span>
-                  <p>{detail.table ? `#${detail.table.number} ${detail.table.name || ''}` : '-'}</p>
-                </div>
                 {isSuperadmin && (
                   <div>
                     <span className="text-slate-500">Cabang</span>
@@ -267,10 +261,6 @@ export default function OrdersPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-500">Diskon</span>
                   <span>{fmt(detail.discount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">PPN 11%</span>
-                  <span>{fmt(detail.tax)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-base border-t pt-2">
                   <span>Total</span>

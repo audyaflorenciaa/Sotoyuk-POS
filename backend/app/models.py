@@ -40,26 +40,8 @@ class Branch(Base):
     users = relationship("User", back_populates="branch")
     products = relationship("Product", back_populates="branch")
     orders = relationship("Order", back_populates="branch")
-    tables = relationship("Table", back_populates="branch")
     settings = relationship("Setting", back_populates="branch")
     customers = relationship("Customer", back_populates="branch")
-
-
-class Table(Base):
-    __tablename__ = "tables"
-
-    id = Column(Integer, primary_key=True, index=True)
-    number = Column(String(20), nullable=False) # Not unique globally, unique per branch
-    name = Column(String(50), nullable=True)
-    capacity = Column(Integer, default=4)
-    status = Column(String(20), default="available")  # available | occupied | reserved
-    branch_id = Column(Integer, ForeignKey("branches.id"), nullable=False) # Each table belongs to a branch
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    branch = relationship("Branch", back_populates="tables")
-    orders = relationship("Order", back_populates="table")
-    
-    __table_args__ = (UniqueConstraint('number', 'branch_id', name='uq_table_number_branch'),)
 
 
 class User(Base):
@@ -134,14 +116,12 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     order_number = Column(String(30), unique=True, index=True, nullable=False)
-    table_id = Column(Integer, ForeignKey("tables.id"), nullable=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
     cashier_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     branch_id = Column(Integer, ForeignKey("branches.id"), nullable=False) # Each order belongs to a branch
     status = Column(String(20), default=OrderStatus.OPEN.value, nullable=False)
     subtotal = Column(Float, default=0)
     discount = Column(Float, default=0)
-    tax = Column(Float, default=0)
     service_charge = Column(Float, default=0)
     total = Column(Float, default=0)
     payment_method = Column(String(20), nullable=True)
@@ -157,7 +137,6 @@ class Order(Base):
     payments = relationship(
         "Payment", back_populates="order", cascade="all, delete-orphan"
     )
-    table = relationship("Table", back_populates="orders")
     branch = relationship("Branch", back_populates="orders")
 
 
@@ -218,52 +197,4 @@ class Customer(Base):
     branch_id = Column(Integer, ForeignKey("branches.id"), nullable=True) # Optional home branch
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    member = relationship("Member", back_populates="customer", uselist=False)
     branch = relationship("Branch", back_populates="customers")
-
-
-class MembershipTier(Base):
-    __tablename__ = "membership_tiers"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), unique=True, index=True, nullable=False)
-    point_rate = Column(Float, default=0)  # poin per Rupiah dibayar
-    discount_percent = Column(Float, default=0)  # diskon khusus tier (opsional)
-    minimum_spend = Column(Float, default=0)  # spend minimum untuk pakai diskon tier
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    members = relationship("Member", back_populates="tier")
-
-
-class Member(Base):
-    __tablename__ = "members"
-
-    id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, unique=True)
-    member_code = Column(String(30), unique=True, index=True, nullable=False)
-    tier_id = Column(Integer, ForeignKey("membership_tiers.id"), nullable=True)
-    points = Column(Integer, default=0)
-    expiry_at = Column(DateTime, nullable=True)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    customer = relationship("Customer", back_populates="member")
-    tier = relationship("MembershipTier", back_populates="members")
-    point_ledger = relationship("MemberPoint", back_populates="member", cascade="all, delete-orphan")
-
-
-class MemberPoint(Base):
-    __tablename__ = "member_points"
-
-    id = Column(Integer, primary_key=True, index=True)
-    member_id = Column(Integer, ForeignKey("members.id"), nullable=False, index=True)
-    order_id = Column(Integer, ForeignKey("orders.id"), nullable=True, index=True)
-    points = Column(Integer, default=0)  # positif = earn, negatif = redeem
-    balance_after = Column(Integer, nullable=False)
-    type = Column(String(20), default="earn")  # earn | redeem | expire
-    description = Column(String(200), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-
-    member = relationship("Member", back_populates="point_ledger")
-    order = relationship("Order")

@@ -126,32 +126,6 @@ class ProductOut(ProductBase):
     branch: Optional[BranchOut] = None
 
 
-# --- Table ---
-class TableCreate(BaseModel):
-    number: str
-    name: Optional[str] = None
-    capacity: int = 4
-    branch_id: Optional[int] = None
-
-
-class TableUpdate(BaseModel):
-    number: Optional[str] = None
-    name: Optional[str] = None
-    capacity: Optional[int] = None
-    status: Optional[str] = None
-    branch_id: Optional[int] = None
-
-
-class TableOut(ORMModel):
-    id: int
-    number: str
-    name: Optional[str] = None
-    capacity: int
-    status: str
-    branch_id: int
-    branch: Optional[BranchOut] = None
-
-
 # --- Customer ---
 class CustomerCreate(BaseModel):
     name: str
@@ -166,82 +140,7 @@ class CustomerOut(ORMModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     branch_id: Optional[int] = None
-    member: Optional["MemberNestedOut"] = None
     branch: Optional[BranchOut] = None
-
-
-# --- Membership ---
-class MembershipTierBase(BaseModel):
-    name: str
-    point_rate: float = 0
-    discount_percent: float = 0
-    minimum_spend: float = 0
-    is_active: bool = True
-
-
-class MembershipTierCreate(MembershipTierBase):
-    pass
-
-
-class MembershipTierUpdate(BaseModel):
-    name: Optional[str] = None
-    point_rate: Optional[float] = None
-    discount_percent: Optional[float] = None
-    minimum_spend: Optional[float] = None
-    is_active: Optional[bool] = None
-
-
-class MembershipTierOut(MembershipTierBase):
-    id: int
-    created_at: datetime
-
-
-class MemberBase(BaseModel):
-    customer_id: int
-    tier_id: Optional[int] = None
-    points: int = 0
-    expiry_at: Optional[datetime] = None
-    is_active: bool = True
-
-
-class MemberCreate(BaseModel):
-    customer_id: int
-    tier_id: Optional[int] = None
-    points: int = 0
-    expiry_at: Optional[datetime] = None
-
-
-class MemberUpdate(BaseModel):
-    tier_id: Optional[int] = None
-    points: Optional[int] = None
-    expiry_at: Optional[datetime] = None
-    is_active: Optional[bool] = None
-
-
-class MemberOut(MemberBase):
-    id: int
-    member_code: str
-    customer: Optional["CustomerOut"] = None
-    tier: Optional[MembershipTierOut] = None
-    created_at: datetime
-
-
-class MemberNestedOut(MemberBase):
-    id: int
-    member_code: str
-    tier: Optional[MembershipTierOut] = None
-    created_at: datetime
-
-
-class MemberPointOut(ORMModel):
-    id: int
-    member_id: int
-    order_id: Optional[int] = None
-    points: int
-    balance_after: int
-    type: str
-    description: Optional[str] = None
-    created_at: datetime
 
 
 # --- Voucher ---
@@ -274,7 +173,6 @@ class OrderItemIn(BaseModel):
 
 
 class OrderCreate(BaseModel):
-    table_id: Optional[int] = None
     customer_id: Optional[int] = None
     items: List[OrderItemIn]
     notes: Optional[str] = None
@@ -295,14 +193,12 @@ class OrderItemOut(ORMModel):
 class OrderOut(ORMModel):
     id: int
     order_number: str
-    table_id: Optional[int] = None
     customer_id: Optional[int] = None
     cashier_id: Optional[int] = None
     branch_id: int
     status: str
     subtotal: float
     discount: float
-    tax: float
     service_charge: float
     total: float
     payment_method: Optional[str] = None
@@ -311,7 +207,6 @@ class OrderOut(ORMModel):
     created_at: Optional[datetime] = None
     paid_at: Optional[datetime] = None
     items: List["OrderItemOut"] = []
-    table: Optional["TableOut"] = None
     customer: Optional["CustomerOut"] = None
     cashier: Optional["UserOut"] = None
     branch: Optional[BranchOut] = None
@@ -323,7 +218,6 @@ class PaymentRequest(BaseModel):
     amount: float
     cash_received: Optional[float] = None
     voucher_code: Optional[str] = None
-    redeem_points: int = 0
     reference: Optional[str] = None
 
 
@@ -375,10 +269,7 @@ class Paginated(BaseModel):
 Token.model_rebuild()
 UserOut.model_rebuild()
 ProductOut.model_rebuild()
-TableOut.model_rebuild()
 CustomerOut.model_rebuild()
-MemberOut.model_rebuild()
-MemberNestedOut.model_rebuild()
 OrderItemOut.model_rebuild()
 OrderOut.model_rebuild()
 SettingOut.model_rebuild()

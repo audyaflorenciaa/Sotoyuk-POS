@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { productAPI, categoryAPI, orderAPI, paymentAPI, settingAPI, membershipAPI, tableAPI } from '../api'
+import { productAPI, categoryAPI, orderAPI, paymentAPI, settingAPI } from '../api'
 import { useAuth } from '../AuthContext'
 import { buildReceiptData } from '../ThermalPrinter'
 import {
@@ -22,7 +22,6 @@ export default function POSPage() {
   const [showPay, setShowPay] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
   const [receipt, setReceipt] = useState(null)
-  const [lastPayment, setLastPayment] = useState(null)
   const [paying, setPaying] = useState(false)
   const [method, setMethod] = useState('cash')
   const [amountPaid, setAmountPaid] = useState('')
@@ -32,56 +31,16 @@ export default function POSPage() {
   const [btPrinter, setBtPrinter] = useState(null)
   const [btStatus, setBtStatus] = useState('')
   const [storeSettings, setStoreSettings] = useState({})
-  const [members, setMembers] = useState([])
-  const [selectedMember, setSelectedMember] = useState(null)
-  const [redeemPoints, setRedeemPoints] = useState('')
-  const [tables, setTables] = useState([])
-  const [selectedTable, setSelectedTable] = useState(null)
 
   useEffect(() => {
     categoryAPI.list().then((r) => setCategories(r.data))
     loadProducts()
-    loadTables()
     settingAPI.list().then((r) => {
       const s = {}
       r.data.forEach((item) => { s[item.key] = item.value || '' })
       setStoreSettings(s)
     })
-    membershipAPI.members.list().then((r) => setMembers(r.data))
-
-    // Refresh table status periodically so multiple cashiers see live status
-    const interval = setInterval(() => {
-      loadTables()
-    }, 5000)
-    return () => clearInterval(interval)
   }, [])
-
-  const loadTables = async () => {
-    const r = await tableAPI.list()
-    setTables(r.data)
-  }
-
-  const handleClearTable = async (id) => {
-    if (!confirm('Tandai meja siap dipakai kembali?')) return
-    try {
-      await tableAPI.updateStatus(id, 'available')
-      loadTables()
-      if (selectedTable?.id === id) setSelectedTable(null)
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Gagal membuka meja')
-    }
-  }
-
-  const handleReserveTable = async (id) => {
-    if (!confirm('Kunci meja untuk reservasi?')) return
-    try {
-      await tableAPI.updateStatus(id, 'reserved')
-      loadTables()
-      if (selectedTable?.id === id) setSelectedTable(null)
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Gagal reservasi meja')
-    }
-  }
 
   const loadProducts = async (catId = null, q = '') => {
     const params = {}
@@ -146,8 +105,7 @@ export default function POSPage() {
   }
 
   const subtotal = cart.reduce((s, i) => s + i.subtotal, 0)
-  const tax = Math.round(subtotal * 0.11)
-  const total = subtotal + tax
+  const total = subtotal
 
   const handlePay = async () => {
     if (cart.length === 0) return
@@ -156,14 +114,11 @@ export default function POSPage() {
     try {
        // Create order
        const orderRes = await orderAPI.create({
-         table_id: selectedTable?.id || null,
-         customer_id: selectedMember?.customer?.id || selectedMember?.customer_id || null,
+         customer_id: null,
          items: cart.map((i) => ({ product_id: i.product_id, qty: i.qty })),
          notes,
        })
        const order = orderRes.data
-       // Refresh table status immediately after order created (table becomes occupied)
-       loadTables()
 
        // Process payment
        const payAmount = method === 'cash' ? parseFloat(amountPaid) || total : total
@@ -171,9 +126,7 @@ export default function POSPage() {
         order_id: order.id,
         method,
         amount: payAmount,
-        redeem_points: parseInt(redeemPoints) || 0,
       })
-      setLastPayment(payRes.data)
 
        // Get receipt
        const receiptRes = await paymentAPI.receipt(order.id)
@@ -183,12 +136,8 @@ export default function POSPage() {
         setCart([])
         setAmountPaid('')
         setNotes('')
-        setSelectedMember(null)
-        setRedeemPoints('')
-        setSelectedTable(null)
-        // Reload products and tables to update stock & table status
+        // Reload products to update stock
         loadProducts(selectedCat, search)
-        loadTables()
     } catch (err) {
       setError(err.response?.data?.detail || 'Pembayaran gagal')
     } finally {
@@ -233,8 +182,6 @@ export default function POSPage() {
     }).join('')
     const discountHtml = receipt.discount > 0 ? `<tr><td>Diskon:</td><td>-${fmt(receipt.discount)}</td></tr>` : ''
     const changeHtml = receipt.change > 0 ? `<tr><td class="bold">Kembali:</td><td class="bold">${fmt(receipt.change)}</td></tr>` : ''
-    const tableLabel = receipt.table ? `Meja ${receipt.table.number || ''}${receipt.table.name ? ' - ' + receipt.table.name : ''}` : ''
-    const tableHtml = tableLabel ? `<div class="bold">${tableLabel}</div>` : ''
 
     const html = `<!DOCTYPE html>
 <html><head><title>Struk</title>
@@ -247,21 +194,19 @@ export default function POSPage() {
   table { width: 100%; } td { padding: 2px 0; } td:last-child { text-align: right; }
   @media print { body { padding: 0; } @page { margin: 5mm; } }
 </style></head><body>
-<div class="center bold big">${storeSettings.store_name || 'Warung Kopi'}</div>
+<div class="center bold big">${storeSettings.store_name || 'Sotoyuk'}</div>
 <div class="center">${storeSettings.store_address || 'Jl. Merdeka No. 88, Bandung'}</div>
 <div class="center">${storeSettings.store_phone || '08123456789'}</div>
 <div class="line2"></div>
 <div class="bold">No   : ${receipt.receipt_no || ''}</div>
 <div class="bold">Tgl  : ${receipt.date ? new Date(receipt.date).toLocaleString('id-ID') : ''}</div>
 <div class="bold">Kasir: ${receipt.cashier || ''}</div>
-${tableHtml}
 <div class="line"></div>
 <table>${itemsHtml}</table>
 <div class="line"></div>
 <table>
 <tr><td>Subtotal:</td><td>${fmt(receipt.subtotal)}</td></tr>
 ${discountHtml}
-<tr><td>PPN 11%:</td><td>${fmt(receipt.tax)}</td></tr>
 </table>
 <div class="line2"></div>
 <table>
@@ -340,75 +285,6 @@ ${changeHtml}
     <div className="flex gap-4 h-[calc(100vh-3rem)]">
       {/* Products */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Tables */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-slate-700">Pilih Meja</h3>
-            <div className="flex gap-3 text-xs">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-500"></span> Kosong</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500"></span> Terisi</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-500"></span> Reservasi</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500"></span> Bersihkan</span>
-            </div>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {tables.map((t) => {
-              const color =
-                t.status === 'occupied' ? 'bg-red-100 border-red-300 text-red-700' :
-                t.status === 'reserved' ? 'bg-amber-100 border-amber-300 text-amber-700' :
-                t.status === 'cleaning' ? 'bg-blue-100 border-blue-300 text-blue-700' :
-                'bg-emerald-100 border-emerald-300 text-emerald-700'
-              const selected = selectedTable?.id === t.id
-              const locked = t.status === 'occupied' || t.status === 'reserved' || t.status === 'cleaning'
-              return (
-                <div
-                  key={t.id}
-                  className={`flex-shrink-0 min-w-[110px] px-2 py-2 rounded-xl border text-center transition-all ${color} ${selected ? 'ring-2 ring-offset-2 ring-amber-500' : ''}`}
-                >
-                  <div className="font-bold text-lg">#{t.number}</div>
-                  <div className="text-xs truncate max-w-[110px] mb-1">{t.name || 'Meja'}</div>
-                  <div className="text-[10px] font-medium uppercase tracking-wide opacity-80 mb-1">
-                    {t.status === 'occupied' ? 'Terisi' : t.status === 'reserved' ? 'Reservasi' : t.status === 'cleaning' ? 'Bersihkan' : 'Kosong'}
-                  </div>
-                  {locked ? (
-                    <button
-                      onClick={() => handleClearTable(t.id)}
-                      className="w-full text-xs bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-2 py-1 rounded-lg font-medium"
-                    >
-                      Buka Meja
-                    </button>
-                  ) : (
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => setSelectedTable(selected ? null : t)}
-                        className={`flex-1 text-xs px-2 py-1 rounded-lg font-medium ${selected ? 'bg-amber-500 text-white' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
-                      >
-                        {selected ? 'Dipilih' : 'Pilih'}
-                      </button>
-                      {(isAdmin || isSuperadmin) && (
-                        <button
-                          onClick={() => handleReserveTable(t.id)}
-                          className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-200 px-2 py-1 rounded-lg font-medium"
-                          title="Kunci reservasi"
-                        >
-                          Reservasi
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-            {tables.length === 0 && <div className="text-sm text-slate-500">Belum ada meja</div>}
-          </div>
-          {selectedTable && (
-            <div className="mt-2 text-sm text-slate-700">
-              Meja dipilih: <span className="font-semibold text-amber-600">#{selectedTable.number} {selectedTable.name ? ` - ${selectedTable.name}` : ''}</span>
-              <button onClick={() => setSelectedTable(null)} className="ml-2 text-red-500 text-xs hover:underline">Hapus</button>
-            </div>
-          )}
-        </div>
-
         {/* Search */}
         <div className="mb-4">
           <div className="relative">
@@ -554,10 +430,6 @@ ${changeHtml}
             <span className="text-slate-500">Subtotal</span>
             <span>{fmt(subtotal)}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">PPN 11%</span>
-            <span>{fmt(tax)}</span>
-          </div>
           <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
             <span>Total</span>
             <span className="text-amber-600">{fmt(total)}</span>
@@ -626,50 +498,6 @@ ${changeHtml}
               </div>
                          </div>
 
-            {/* Member / Points Redemption */}
-            <div className="mb-4">
-              <p className="text-sm font-medium text-slate-700 mb-2">Member</p>
-              <select
-                value={selectedMember?.id || ''}
-                onChange={(e) => {
-                  const m = members.find((mm) => String(mm.id) === e.target.value)
-                  setSelectedMember(m || null)
-                  setRedeemPoints('')
-                }}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="">Pilih member (opsional)</option>
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.member_code} - {m.customer?.name || '-'} ({m.points} poin)
-                  </option>
-                ))}
-              </select>
-              {selectedMember && (
-                <div className="mt-2 flex items-end gap-3">
-                  <div className="flex-1">
-                    <p className="text-xs text-slate-500 mb-1">Poin tersedia: <b className="text-amber-600">{selectedMember.points}</b></p>
-                    <input
-                      type="number"
-                      min="0"
-                      max={selectedMember.points}
-                      value={redeemPoints}
-                      onChange={(e) => setRedeemPoints(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-500"
-                      placeholder="Poin redeem"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setRedeemPoints(Math.min(50, selectedMember.points).toString())}
-                    className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-medium"
-                  >
-                    Pakai 50
-                  </button>
-                </div>
-              )}
-            </div>
-
             {/* Cash amount */}
             {method === 'cash' && (
               <div className="mb-4">
@@ -731,7 +559,7 @@ ${changeHtml}
             {/* Receipt content */}
             <div id="printable-receipt" className="bg-slate-50 rounded-xl p-4 font-mono text-xs space-y-2">
               <div className="text-center">
-                <p className="font-bold text-sm">{storeSettings.store_name || 'Warung Kopi'}</p>
+                <p className="font-bold text-sm">{storeSettings.store_name || 'Sotoyuk'}</p>
                 <p className="text-slate-500">{storeSettings.store_address || 'Jl. Merdeka No. 88, Bandung'}</p>
                 <p className="text-slate-500">Telp: {storeSettings.store_phone || '08123456789'}</p>
                 <p className="border-b border-dashed border-slate-300 my-2"></p>
@@ -739,11 +567,6 @@ ${changeHtml}
                 <p className="text-slate-500">
                   {new Date(receipt.date).toLocaleString('id-ID')}
                 </p>
-                {receipt.table && (
-                  <p className="font-bold text-slate-700 mt-1">
-                    Meja: #{receipt.table.number} {receipt.table.name ? `- ${receipt.table.name}` : ''}
-                  </p>
-                )}
               </div>
               <div className="border-b border-dashed border-slate-300 my-2"></div>
               <table className="w-full">
@@ -782,10 +605,6 @@ ${changeHtml}
                   <span>Subtotal</span>
                   <span>{fmt(receipt.subtotal)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>PPN 11%</span>
-                  <span>{fmt(receipt.tax)}</span>
-                </div>
                 <div className="flex justify-between font-bold text-sm border-t pt-1">
                   <span>TOTAL</span>
                   <span>{fmt(receipt.total)}</span>
@@ -798,22 +617,6 @@ ${changeHtml}
                  <div className="flex justify-between font-bold">
                    <span>Kembalian</span>
                    <span>{fmt(receipt.change)}</span>
-                 </div>
-               )}
-               {lastPayment && (lastPayment.points_earned || lastPayment.points_used) && (
-                 <div className="mt-2 pt-2 border-t border-slate-200 space-y-1">
-                   {lastPayment.points_used ? (
-                     <div className="flex justify-between text-xs text-green-700">
-                       <span>Poin redeem</span>
-                       <span>-{lastPayment.points_used} poin</span>
-                     </div>
-                   ) : null}
-                   {lastPayment.points_earned ? (
-                     <div className="flex justify-between text-xs text-amber-700">
-                       <span>Poin dapat</span>
-                       <span>+{lastPayment.points_earned} poin</span>
-                     </div>
-                   ) : null}
                  </div>
                )}
                </div>

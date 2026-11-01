@@ -7,8 +7,8 @@ from app.config import get_settings
 from app.core.security import hash_password
 from app.database import Base, engine, SessionLocal
 from app.models import (
-    Branch, Category, Customer, Member, MembershipTier, Order, OrderItem, Payment, Product,
-    Setting, Table, User, Voucher,
+    Branch, Category, Customer, Order, OrderItem, Payment, Product,
+    Setting, User, Voucher,
 )
 
 fake = Faker("id_ID")
@@ -21,16 +21,13 @@ db = SessionLocal()
 # ---------------------------------------------------------------------------
 
 BRANCHES = [
-    {"name": "Cabang Utama", "address": "Jl. Merdeka No. 1, Bandung"},
-    {"name": "Cabang Dago", "address": "Jl. Ir. H. Juanda No. 20, Bandung"},
+    {"name": "Gading Serpong (Pisa Grande)", "address": "Pisa Grande, Gading Serpong, Tangerang"},
 ]
 
 USERS = [
     {"username": "superadmin", "full_name": "Super Admin", "password": "superadmin", "role": "superadmin", "email": "super@kasir.id", "branch_name": None},
-    {"username": "admin_utama", "full_name": "Admin Utama", "password": "admin", "role": "admin", "email": "admin.utama@kasir.id", "branch_name": "Cabang Utama"},
-    {"username": "kasir_utama", "full_name": "Kasir Utama", "password": "kasir1", "role": "kasir", "email": "kasir.utama@kasir.id", "branch_name": "Cabang Utama"},
-    {"username": "admin_dago", "full_name": "Admin Dago", "password": "admin", "role": "admin", "email": "admin.dago@kasir.id", "branch_name": "Cabang Dago"},
-    {"username": "kasir_dago", "full_name": "Kasir Dago", "password": "kasir1", "role": "kasir", "email": "kasir.dago@kasir.id", "branch_name": "Cabang Dago"},
+    {"username": "admin_utama", "full_name": "Admin Pisa Grande", "password": "admin", "role": "admin", "email": "admin.pisagrande@kasir.id", "branch_name": "Gading Serpong (Pisa Grande)"},
+    {"username": "kasir_utama", "full_name": "Kasir Pisa Grande", "password": "kasir1", "role": "kasir", "email": "kasir.pisagrande@kasir.id", "branch_name": "Gading Serpong (Pisa Grande)"},
 ]
 
 CATEGORIES = [
@@ -99,19 +96,6 @@ BASE_PRODUCTS = [
     {"sku": "PK008", "name": "Paket Gathering 10Pax",   "category": "Paket",   "price": 500000, "hpp": 300000, "stock": 5},
 ]
 
-BASE_TABLES = [
-    {"number": "1",   "name": "Depan",   "capacity": 2},
-    {"number": "2",   "name": "Depan",   "capacity": 2},
-    {"number": "3",   "name": "Tengah",  "capacity": 4},
-    {"number": "4",   "name": "Tengah",  "capacity": 4},
-    {"number": "5",   "name": "Tengah",  "capacity": 4},
-    {"number": "6",   "name": "Tengah",  "capacity": 6},
-    {"number": "7",   "name": "Belakang","capacity": 6},
-    {"number": "8",   "name": "Belakang","capacity": 6},
-    {"number": "9",   "name": "VIP",     "capacity": 8},
-    {"number": "10",  "name": "VIP",     "capacity": 8},
-]
-
 VOUCHERS = [ # Global vouchers
     {"code": "HEMAT10", "name": "Diskon 10%",   "discount_type": "percent",  "discount_value": 10, "max_discount": 50000,  "min_order": 50000},
     {"code": "HEMAT20", "name": "Diskon 20%",   "discount_type": "percent",  "discount_value": 20, "max_discount": 100000, "min_order": 100000},
@@ -119,13 +103,6 @@ VOUCHERS = [ # Global vouchers
     {"code": "GRATIS1", "name": "Hemat Rp10.000", "discount_type": "nominal", "discount_value": 10000, "max_discount": None, "min_order": 30000},
     {"code": "WELCOME", "name": "Welcome 15%",   "discount_type": "percent",  "discount_value": 15, "max_discount": 30000,  "min_order": 0},
 ]
-
-TIERS = [ # Global tiers
-    {"name": "Silver",  "point_rate": 0.01,  "minimum_spend": 50000,  "is_active": True},
-    {"name": "Gold",    "point_rate": 0.02,  "minimum_spend": 100000, "is_active": True},
-    {"name": "Platinum","point_rate": 0.03,  "minimum_spend": 250000,  "is_active": True},
-]
-
 
 def seed():
     print("Seeding database...")
@@ -189,21 +166,6 @@ def seed():
     db.flush()
     print(f"  Products:    {len(all_products)}")
 
-    # --- Tables (Duplicated per Branch) ---
-    all_tables = []
-    for branch_name, branch_obj in branch_map.items():
-        for t_data in BASE_TABLES:
-            table = Table(
-                number=t_data["number"],
-                name=f"{t_data['name']} ({branch_name})",
-                capacity=t_data["capacity"],
-                branch_id=branch_obj.id,
-            )
-            db.add(table)
-            all_tables.append(table)
-    db.flush()
-    print(f"  Tables:      {len(all_tables)}")
-
     # --- Customers (Allocated to Branches) ---
     customers_by_branch = {b.id: [] for b in branch_map.values()}
     for i in range(10): # 10 customers total
@@ -217,7 +179,7 @@ def seed():
         db.add(c)
         customers_by_branch[branch_obj.id].append(c)
     db.flush()
-    print(f"  Customers:   {len(customers_by_branch[list(branch_map.values())[0].id] + customers_by_branch[list(branch_map.values())[1].id])}")
+    print(f"  Customers:   {sum(len(v) for v in customers_by_branch.values())}")
 
     # --- Vouchers (Global) ---
     for v_data in VOUCHERS:
@@ -225,40 +187,13 @@ def seed():
     db.flush()
     print(f"  Vouchers:    {len(VOUCHERS)}")
 
-    # --- Membership Tiers (Global) ---
-    tier_map = {}
-    for t_data in TIERS:
-        obj = MembershipTier(**t_data)
-        db.add(obj)
-        db.flush()
-        tier_map[obj.name] = obj.id
-    print(f"  Tiers:       {len(TIERS)}")
-
-    # --- Members (convert some customers, with branch_id) ---
-    member_count = 0
-    for branch_id, cust_list in customers_by_branch.items():
-        for c in cust_list[:1]: # Make 1 member per branch
-            m = Member(
-                customer_id=c.id,
-                member_code=f"MB{member_count + 1:05d}",
-                tier_id=tier_map["Silver"],
-                points=500,
-                expiry_at=datetime.now(timezone.utc) + timedelta(days=365),
-                is_active=True,
-            )
-            db.add(m)
-            member_count += 1
-    db.flush()
-    print(f"  Members:     {member_count}")
-
     # --- Settings (Duplicated per Branch) ---
     for branch_name, branch_obj in branch_map.items():
         # Override default settings to ensure they are unique per branch
         branch_settings = [
-            ("store_name", f"WarungKopi {branch_name}"),
+            ("store_name", f"Sotoyuk {branch_name}"),
             ("store_address", f"{branch_obj.address}"),
             ("store_phone", fake.phone_number()[:20]),
-            ("tax_rate", "11"),
             ("service_charge", "0"),
             ("receipt_footer", f"Terima kasih atas kunjungan Anda di {branch_name}!"),
             ("currency", "IDR"),
@@ -274,11 +209,10 @@ def seed():
     order_count = 0
     for branch_name, branch_obj in branch_map.items():
         branch_products = [p for p in all_products if p.branch_id == branch_obj.id]
-        branch_tables = [t for t in all_tables if t.branch_id == branch_obj.id]
         branch_cashiers = users_by_branch[branch_obj.id]
         branch_customers = customers_by_branch[branch_obj.id]
         
-        if not branch_products or not branch_tables or not branch_cashiers or not branch_customers:
+        if not branch_products or not branch_cashiers or not branch_customers:
             print(f"  Skipping orders for {branch_name} due to insufficient data.")
             continue
 
@@ -287,7 +221,6 @@ def seed():
             for _ in range(orders_per_day):
                 dt = datetime.now(timezone.utc) - timedelta(days=day_offset, hours=random.randint(8, 21), minutes=random.randint(0, 59))
                 
-                table = random.choice(branch_tables)
                 customer = random.choice(branch_customers)
                 cashier = random.choice(branch_cashiers)
                 
@@ -298,7 +231,6 @@ def seed():
                 subtotal = 0
                 order = Order(
                     order_number=order_num,
-                    table_id=table.id,
                     customer_id=customer.id,
                     cashier_id=cashier.id,
                     branch_id=branch_obj.id, # Assign branch_id to order
@@ -324,12 +256,10 @@ def seed():
                     ))
                     subtotal += item_sub
 
-                tax = round(subtotal * 0.11)
-                total = subtotal - order.discount + tax 
+                total = subtotal - order.discount
                 method = random.choice(["cash", "qris", "debit", "credit"])
 
                 order.subtotal = round(subtotal)
-                order.tax = tax
                 order.total = total
                 order.payment_method = method
 
@@ -344,10 +274,9 @@ def seed():
     # Add a few open orders (for testing)
     for branch_name, branch_obj in branch_map.items():
         branch_products = [p for p in all_products if p.branch_id == branch_obj.id]
-        branch_tables = [t for t in all_tables if t.branch_id == branch_obj.id]
         branch_cashiers = users_by_branch[branch_obj.id]
 
-        if not branch_products or not branch_tables or not branch_cashiers:
+        if not branch_products or not branch_cashiers:
             print(f"  Skipping open orders for {branch_name} due to insufficient data.")
             continue
 
@@ -355,7 +284,6 @@ def seed():
             dt = datetime.now(timezone.utc) - timedelta(minutes=random.randint(5, 30))
             order_num = f"ORD-OPEN-{branch_obj.id}-{order_count + 1:05d}"
             
-            table = random.choice(branch_tables)
             cashier = random.choice(branch_cashiers)
 
             n_items = random.randint(1, 3)
@@ -363,7 +291,6 @@ def seed():
 
             order = Order(
                 order_number=order_num,
-                table_id=table.id,
                 cashier_id=cashier.id,
                 branch_id=branch_obj.id, # Assign branch_id to order
                 status="open",
@@ -388,10 +315,8 @@ def seed():
                 ))
                 subtotal += item_sub
 
-            tax = round(subtotal * 0.11)
             order.subtotal = round(subtotal)
-            order.tax = tax
-            order.total = subtotal + tax
+            order.total = subtotal
             order.payment_method = None
             order_count += 1
 

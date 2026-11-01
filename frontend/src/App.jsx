@@ -6,12 +6,10 @@ import DashboardPage from './pages/DashboardPage'
 import POSPage from './pages/POSPage'
 import ProductsPage from './pages/ProductsPage'
 import CategoriesPage from './pages/CategoriesPage'
-import TablesPage from './pages/TablesPage'
 import OrdersPage from './pages/OrdersPage'
 import ReportsPage from './pages/ReportsPage'
 import UsersPage from './pages/UsersPage'
 import SettingsPage from './pages/SettingsPage'
-import MembershipsPage from './pages/MembershipsPage'
 import BranchesPage from './pages/BranchesPage'
 
 function ProtectedRoute({ children }) {
@@ -33,8 +31,6 @@ function AppRoutes() {
       <Route path="/pos" element={<ProtectedRoute><POSPage /></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
       <Route path="/categories" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
-      <Route path="/tables" element={<ProtectedRoute><TablesPage /></ProtectedRoute>} />
-      <Route path="/memberships" element={<ProtectedRoute><MembershipsPage /></ProtectedRoute>} />
       <Route path="/branches" element={<ProtectedRoute><BranchesPage /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />

@@ -61,7 +61,7 @@ cd POS-WarungKopi
 
 # Buat file .env
 cat > backend/.env << 'EOF'
-APP_NAME=POS Warung Kopi
+APP_NAME=Sotoyuk
 APP_ENV=production
 DEBUG=false
 SECRET_KEY=$(openssl rand -hex 32)

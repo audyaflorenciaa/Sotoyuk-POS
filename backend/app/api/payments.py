@@ -6,9 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user, get_admin_user, get_current_branch
 from app.database import get_db
-from app.models import Order, Payment, Voucher, Table, User, Customer, Member, MemberPoint, Branch
+from app.models import Order, Payment, Voucher, User, Branch
 from app.schemas import OrderOut, PaymentRequest, PaymentResult
-from app.utils.membership import earn_points
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -43,40 +42,9 @@ def process_payment(
                     discount = voucher.discount_value
             order.voucher_code = body.voucher_code
 
-    # Load member for this order's customer (for point earning + redemption)
-    member = None
-    if order.customer_id:
-        member = db.query(Member).join(Customer).filter(
-            Member.customer_id == order.customer_id, 
-            Member.is_active == True,
-            Customer.branch_id == current_branch.id # Member's customer must be in the current branch
-        ).first()
-
-    # Apply member point redemption
-    points_used = 0
-    if body.redeem_points > 0:
-        if not member:
-            raise HTTPException(400, "Order ini tidak memiliki member yang bisa redeem poin di cabang ini")
-        if member.points < body.redeem_points:
-            raise HTTPException(400, "Poin member tidak mencukupi")
-        points_used = body.redeem_points
-        member.points -= points_used
-        db.add(MemberPoint(
-            member_id=member.id,
-            order_id=order.id,
-            points=-points_used,
-            balance_after=member.points,
-            type="redeem",
-            description="Redeem diskon di kasir",
-        ))
-        discount += points_used # Add points redemption as a discount
-        db.add(member) # Persist member points change
-
     # Recalculate totals
-    tax = round((order.subtotal - discount) * 0.11)
-    total = round(order.subtotal - discount + tax)
+    total = round(order.subtotal - discount)
     order.discount = round(discount)
-    order.tax = tax
     order.total = total
 
     if body.amount < total:
@@ -97,38 +65,20 @@ def process_payment(
     order.payment_method = body.method
     order.paid_at = datetime.now(timezone.utc)
 
-    # NOTE: Table is no longer auto-freed after payment. Cashier must manually
-    # mark the table as available/cleaned from the Tables page or POS.
-
     db.commit()
     db.refresh(order)
     db.refresh(order, ["items"]) # Ensure items are refreshed for the response
-
-    # Earn member points (after payment settled) — based on order total
-    points_earned = 0
-    if member:
-        # Re-fetch member from DB to ensure it has latest state after commit, including updated points
-        # Or alternatively, ensure the existing member object is properly refreshed/merged
-        member = db.query(Member).get(member.id) 
-        points_earned = earn_points(member, order.total, order.id, db)
 
     return {
         "order": {
             "id": order.id,
             "order_number": order.order_number,
-            "table_id": order.table_id,
-            "table": {
-                "id": order.table_id,
-                "number": order.table.number if order.table else None,
-                "name": order.table.name if order.table else None,
-            } if order.table_id else None,
             "customer_id": order.customer_id,
             "cashier_id": order.cashier_id,
             "branch_id": order.branch_id, # Include branch_id in response
             "status": order.status,
             "subtotal": order.subtotal,
             "discount": order.discount,
-            "tax": order.tax,
             "service_charge": order.service_charge,
             "total": order.total,
             "payment_method": order.payment_method,
@@ -152,8 +102,6 @@ def process_payment(
         },
         "change": change,
         "payment": {"id": payment.id, "method": payment.method, "amount": payment.amount},
-        "points_earned": points_earned,
-        "points_used": points_used,
     }
 
 @router.get("/receipt/{order_id}")
@@ -178,11 +126,6 @@ def get_receipt(
         "receipt_no": order.order_number,
         "date": order.created_at.isoformat() if order.created_at else "",
         "cashier": current_user.full_name or current_user.username,
-        "table": {
-            "id": order.table_id,
-            "number": order.table.number if order.table else None,
-            "name": order.table.name if order.table else None,
-        } if order.table_id else None,
         "items": [
             {
                 "name": i.product_name.replace(f" ({order.branch.name})", "").strip() if order.branch else i.product_name,
@@ -196,7 +139,6 @@ def get_receipt(
         ],
         "subtotal": order.subtotal,
         "discount": order.discount,
-        "tax": order.tax,
         "service_charge": order.service_charge,
         "total": order.total,
         "payment_method": order.payment_method,

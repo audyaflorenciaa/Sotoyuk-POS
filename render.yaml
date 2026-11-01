@@ -16,7 +16,7 @@ services:
       - key: DEBUG
         value: "false"
       - key: APP_NAME
-        value: "POS Warung Kopi"
+        value: "Sotoyuk"
       - key: PYTHON_VERSION
         value: "3.12"
     healthCheckPath: /api/health

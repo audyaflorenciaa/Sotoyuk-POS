@@ -5,9 +5,9 @@ import { settingAPI } from './api'
 import { applyBrandSettings } from './utils/brand'
 import { applyTheme } from './utils/theme'
 import {
-  LayoutDashboard, ShoppingCart, Package, Grid3X3, Table2, CreditCard,
+  LayoutDashboard, ShoppingCart, Package, Grid3X3, CreditCard,
   ClipboardList, BarChart3, Users, Settings, LogOut, Menu, X, Receipt,
-  Gift, Building2, KeyRound
+  Building2, KeyRound
 } from 'lucide-react'
 import BranchSwitcher from './components/BranchSwitcher'
 import ChangePasswordModal from './components/ChangePasswordModal'
@@ -17,8 +17,6 @@ const navItems = [
   { to: '/pos', icon: ShoppingCart, label: 'POS / Kasir', roles: ['superadmin', 'admin', 'kasir'] },
   { to: '/products', icon: Package, label: 'Produk', roles: ['superadmin', 'admin'] },
   { to: '/categories', icon: Grid3X3, label: 'Kategori', roles: ['superadmin', 'admin'] },
-  { to: '/tables', icon: Table2, label: 'Meja', roles: ['superadmin', 'admin'] },
-  { to: '/memberships', icon: Gift, label: 'Membership', roles: ['superadmin', 'admin'] },
   { to: '/orders', icon: ClipboardList, label: 'Riwayat Order', roles: ['superadmin', 'admin', 'kasir'] },
   { to: '/reports', icon: BarChart3, label: 'Laporan', roles: ['superadmin', 'admin'] },
   { to: '/users', icon: Users, label: 'User', roles: ['superadmin'] },
@@ -72,7 +70,7 @@ export default function Layout({ children }) {
               {storeLogo ? (
                 <img src={storeLogo} alt="Logo" className="w-8 h-8 rounded-lg object-contain" />
               ) : (
-                <span className="text-2xl font-bold" style={{ color: 'var(--sidebar-active)' }}>K</span>
+                <span className="text-2xl font-bold" style={{ color: 'var(--sidebar-active)' }}>S</span>
               )}
               <span className="text-lg font-bold" style={{ color: 'var(--sidebar-active)' }}>{storeName}</span>
             </div>

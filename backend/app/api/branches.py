@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_superadmin_user, get_current_user
 from app.database import get_db
-from app.models import Branch, User
+from app.models import Branch, User, Product, Order, Setting, Customer
 from app.schemas import Message, BranchCreate, BranchOut
 
 router = APIRouter(prefix="/branches", tags=["branches"])
@@ -96,8 +96,6 @@ def delete_branch(
         raise HTTPException(400, "Tidak bisa menghapus cabang yang masih memiliki produk")
     if db.query(Order).filter(Order.branch_id == id).first():
         raise HTTPException(400, "Tidak bisa menghapus cabang yang masih memiliki order")
-    if db.query(Table).filter(Table.branch_id == id).first():
-        raise HTTPException(400, "Tidak bisa menghapus cabang yang masih memiliki meja")
     if db.query(Setting).filter(Setting.branch_id == id).first():
         raise HTTPException(400, "Tidak bisa menghapus cabang yang masih memiliki pengaturan")
     if db.query(Customer).filter(Customer.branch_id == id).first():

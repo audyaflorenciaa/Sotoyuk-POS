@@ -227,7 +227,6 @@ Login sebagai **superadmin** → **Settings**:
 - Alamat & telepon
 - Footer receipt
 - Warna tema (sidebar, primary, background)
-- PPN (%)
 
 ---
 

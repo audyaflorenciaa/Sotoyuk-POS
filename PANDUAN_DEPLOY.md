@@ -159,7 +159,7 @@ Isi file:
 
 ```ini
 [Unit]
-Description=F&B POS - WarungKopi Cafe
+Description=F&B POS - Sotoyuk
 After=network.target
 
 [Service]

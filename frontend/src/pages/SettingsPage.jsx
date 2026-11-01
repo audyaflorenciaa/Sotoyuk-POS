@@ -59,7 +59,6 @@ export default function SettingsPage() {
     { key: 'store_name', label: 'Nama Toko', type: 'text' },
     { key: 'store_address', label: 'Alamat', type: 'text' },
     { key: 'store_phone', label: 'Telepon', type: 'text' },
-    { key: 'tax_rate', label: 'Pajak (PPN %)', type: 'number' },
     { key: 'service_charge', label: 'Service Charge (%)', type: 'number' },
     { key: 'receipt_footer', label: 'Footer Struk', type: 'text' },
     { key: 'currency', label: 'Mata Uang', type: 'text' },

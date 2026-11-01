@@ -134,7 +134,7 @@ class UsbPrinter {
 export function buildUsbReceiptData(receipt, storeSettings = {}) {
   const cmds = []
 
-  const storeName = storeSettings.store_name || 'Warung Kopi'
+  const storeName = storeSettings.store_name || 'Sotoyuk'
   const storeAddress = storeSettings.store_address || 'Jl. Merdeka No. 88, Bandung'
   const storePhone = storeSettings.store_phone || '08123456789'
   const footer = storeSettings.receipt_footer || 'Terima kasih atas kunjungan Anda!'
@@ -161,9 +161,6 @@ export function buildUsbReceiptData(receipt, storeSettings = {}) {
   cmds.push(UsbPrinter.encodeText('No   : ' + (receipt.receipt_no || '')))
   cmds.push(UsbPrinter.encodeText('Tgl  : ' + (receipt.date ? new Date(receipt.date).toLocaleString('id-ID') : '')))
   cmds.push(UsbPrinter.encodeText('Kasir: ' + (receipt.cashier || '')))
-  if (receipt.table) {
-    cmds.push(UsbPrinter.encodeText('Meja : ' + String(receipt.table)))
-  }
   cmds.push(UsbPrinter.bold(false))
   cmds.push(UsbPrinter.encodeText('--------------------------------'))
 
@@ -181,7 +178,6 @@ export function buildUsbReceiptData(receipt, storeSettings = {}) {
   if (receipt.discount > 0) {
     cmds.push(UsbPrinter.encodeText(UsbPrinter.lineText('Diskon:', '-' + formatIDR(receipt.discount), lineWidth)))
   }
-  cmds.push(UsbPrinter.encodeText(UsbPrinter.lineText('PPN 11%:', formatIDR(receipt.tax), lineWidth)))
   cmds.push(UsbPrinter.encodeText('================================'))
   cmds.push(UsbPrinter.bold(true))
   cmds.push(UsbPrinter.setSize(2, 1))

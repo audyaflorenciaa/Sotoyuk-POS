@@ -10,7 +10,7 @@ REGION="${GCLOUD_REGION:-asia-southeast1}"
 SERVICE_NAME="pos-warungkopi"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}"
 
-echo "=== POS Warung Kopi - Deploy to Google Cloud Run ==="
+echo "=== Sotoyuk - Deploy to Google Cloud Run ==="
 echo "Project : ${PROJECT_ID}"
 echo "Region  : ${REGION}"
 echo ""
@@ -56,7 +56,7 @@ gcloud run deploy ${SERVICE_NAME} \
     --cpu 1 \
     --min-instances 0 \
     --max-instances 1 \
-    --set-env-vars "APP_ENV=production,DEBUG=false,APP_NAME=POS Warung Kopi,SECRET_KEY=${SECRET_KEY}" \
+    --set-env-vars "APP_ENV=production,DEBUG=false,APP_NAME=Sotoyuk,SECRET_KEY=${SECRET_KEY}" \
     --set-env-vars "DATABASE_URL=sqlite:///./kasir.db"
 
 # ============ DONE ============

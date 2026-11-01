@@ -36,7 +36,7 @@ Tambahkan di tab **Environment**:
 | `SECRET_KEY` | *(klik generate atau isi random string panjang)* |
 | `APP_ENV` | `production` |
 | `DEBUG` | `false` |
-| `APP_NAME` | `POS Warung Kopi` |
+| `APP_NAME` | `Sotoyuk` |
 
 ### 4. Deploy
 - Klik **Deploy**

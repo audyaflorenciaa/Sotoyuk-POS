@@ -72,15 +72,6 @@ export const productAPI = {
   },
 }
 
-export const tableAPI = {
-  list: (status) => api.get('/tables', { params: { status } }),
-  get: (id) => api.get(`/tables/${id}`),
-  create: (data) => api.post('/tables', data),
-  update: (id, data) => api.put(`/tables/${id}`, data),
-  updateStatus: (id, status) => api.put(`/tables/${id}/status`, null, { params: { status } }),
-  delete: (id) => api.delete(`/tables/${id}`),
-}
-
 export const orderAPI = {
   list: (params) => api.get('/orders', { params }),
   get: (id) => api.get(`/orders/${id}`),
@@ -92,24 +83,6 @@ export const orderAPI = {
 export const paymentAPI = {
   pay: (data) => api.post('/payments/pay', data),
   receipt: (orderId) => api.get(`/payments/receipt/${orderId}`),
-}
-
-export const membershipAPI = {
-  tiers: {
-    list: () => api.get('/memberships/tiers'),
-    create: (data) => api.post('/memberships/tiers', data),
-    update: (id, data) => api.put(`/memberships/tiers/${id}`, data),
-    delete: (id) => api.delete(`/memberships/tiers/${id}`),
-  },
-  members: {
-    list: (params) => api.get('/memberships/members', { params }),
-    get: (id) => api.get(`/memberships/members/${id}`),
-    create: (data) => api.post('/memberships/members', data),
-    update: (id, data) => api.put(`/memberships/members/${id}`, data),
-    delete: (id) => api.delete(`/memberships/members/${id}`),
-    points: (id) => api.get(`/memberships/members/${id}/points`),
-    redeem: (id, points) => api.post(`/memberships/members/${id}/redeem`, null, { params: { points } }),
-  },
 }
 
 export const reportAPI = {

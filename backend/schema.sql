@@ -54,25 +54,14 @@ CREATE TABLE IF NOT EXISTS vouchers (
     created_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS tables (
-    id        SERIAL PRIMARY KEY,
-    number    VARCHAR(20) UNIQUE NOT NULL,
-    name      VARCHAR(50),
-    capacity  INT DEFAULT 4,
-    status    VARCHAR(20) DEFAULT 'available',
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS orders (
     id              SERIAL PRIMARY KEY,
     order_number    VARCHAR(30) UNIQUE NOT NULL,
-    table_id        INT REFERENCES tables(id),
     customer_id     INT REFERENCES customers(id),
     cashier_id      INT REFERENCES users(id),
     status          VARCHAR(20) NOT NULL DEFAULT 'open',
     subtotal        NUMERIC(12,2) DEFAULT 0,
     discount        NUMERIC(12,2) DEFAULT 0,
-    tax             NUMERIC(12,2) DEFAULT 0,
     service_charge  NUMERIC(12,2) DEFAULT 0,
     total           NUMERIC(12,2) DEFAULT 0,
     payment_method  VARCHAR(20),

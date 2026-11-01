@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user, get_admin_user, get_current_branch
 from app.database import get_db
-from app.models import Order, OrderItem, Product, Table, Voucher, User, Branch
+from app.models import Order, OrderItem, Product, Voucher, User, Branch
 from app.schemas import Message, OrderCreate, OrderOut, OrderItemOut
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -84,17 +84,8 @@ def create_order(
     
     order_number = generate_order_number(db, current_branch.id)
 
-    if body.table_id:
-        table = db.query(Table).filter(Table.id == body.table_id, Table.branch_id == current_branch.id).first()
-        if not table:
-            raise HTTPException(404, "Meja tidak ditemukan di cabang ini")
-        if table.status != "available":
-            raise HTTPException(400, "Meja tidak tersedia")
-        table.status = "occupied"
-    
     order = Order(
         order_number=order_number,
-        table_id=body.table_id,
         customer_id=body.customer_id,
         cashier_id=current_user.id,
         branch_id=current_branch.id, # Assign current branch_id
@@ -133,11 +124,8 @@ def create_order(
         product.stock -= item.qty
         subtotal += item_subtotal
 
-    tax = subtotal * 0.11  # PPN 11%
-    total = subtotal + tax
     order.subtotal = round(subtotal)
-    order.tax = round(tax)
-    order.total = round(total)
+    order.total = round(subtotal)
     db.commit()
     db.refresh(order)
     return order
@@ -165,11 +153,6 @@ def void_order(
         if product:
             product.stock += item.qty
     order.status = "void"
-    
-    if order.table_id:
-        table = db.query(Table).filter(Table.id == order.table_id, Table.branch_id == current_branch.id).first()
-        if table:
-            table.status = "available"
 
     db.commit()
     db.refresh(order)
@@ -191,12 +174,6 @@ def delete_order(
         raise HTTPException(404, "Order tidak ditemukan di cabang ini")
     if order.status == "paid":
         raise HTTPException(400, "Tidak bisa menghapus order yang sudah dibayar")
-    
-    # Tables also need to be freed up
-    if order.table_id:
-        table = db.query(Table).filter(Table.id == order.table_id, Table.branch_id == current_branch.id).first()
-        if table and table.status == "occupied":
-            table.status = "available"
 
     db.delete(order)
     db.commit()
